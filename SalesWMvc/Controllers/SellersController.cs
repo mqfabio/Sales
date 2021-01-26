@@ -4,6 +4,8 @@ using SalesWMvc.Services;
 using SalesWMvc.Models.ViewModels;
 using System.Collections.Generic;
 using SalesWMvc.Services.Exceptions;
+using System.Diagnostics;
+using System;
 
 namespace SalesWMvc.Controllers
 {
@@ -42,12 +44,12 @@ namespace SalesWMvc.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not provided" });
             }
             var obj = _sellerService.FindById(id.Value);
             if (obj == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not found" }); 
             }
             return View(obj);
         }
@@ -64,12 +66,12 @@ namespace SalesWMvc.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not provided" });
             }
             var obj = _sellerService.FindById(id.Value);
             if (obj == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not found" });
             }
             return View(obj);
         }
@@ -78,12 +80,12 @@ namespace SalesWMvc.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not provided" });
             }
             var obj = _sellerService.FindById(id.Value);
             if (obj == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id not found" });
             }
             List<Department> departments = _departmentService.FindAll();
             SellerFromViewModel viewModel = new SellerFromViewModel { Seller = obj, Departments = departments };
@@ -96,7 +98,7 @@ namespace SalesWMvc.Controllers
         {
             if (id != seller.Id)
             {
-                return BadRequest();
+                return RedirectToAction(nameof(Error), new { message = "Id missmath" });
             }
             try
             {
@@ -104,15 +106,19 @@ namespace SalesWMvc.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            catch (NotFoundException)
+            catch (ApplicationException e)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = e.Message });
             }
-            catch(DbConcurrencyException)
+        }
+        public IActionResult Error(string message)
+        {
+            var viewmModel = new ErrorViewModel
             {
-                BadRequest();
-            }
-            return RedirectToAction(nameof(Index));
+                Message = message,
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            };
+            return View(viewmModel);
         }
     }
 }
